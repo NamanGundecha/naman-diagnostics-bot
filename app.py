@@ -231,11 +231,19 @@ def files(filename):
 
 # ================= WHATSAPP ROUTE =================
 
+
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp():
 
-    msg = request.form.get("Body").strip()
-    user = request.form.get("From")
+    incoming_msg = request.values.get('Body', '').lower()
+
+    response = MessagingResponse()
+
+    msg = response.message()
+
+    msg.body("Hello from Naman Diagnostics")
+
+    return str(response)
 
     # ================= FIRST MESSAGE =================
 
