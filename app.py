@@ -1,9 +1,12 @@
-from flask import Flask, request
+from flask import Flask, request, send_file
 from twilio.twiml.messaging_response import MessagingResponse
 from twilio.rest import Client
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.pagesizes import letter
 import json
 import os
 
@@ -89,6 +92,78 @@ Address: {address}
 
         print("Admin alert failed:", e)
 
+# ================= PDF REPORT =================
+
+def create_pdf(name, test, date, slot, address):
+
+    filename = f"{name.replace(' ', '_')}_report.pdf"
+
+    doc = SimpleDocTemplate(
+        filename,
+        pagesize=letter
+    )
+
+    styles = getSampleStyleSheet()
+
+    story = []
+
+    title = Paragraph(
+        "<b>NAMAN DIAGNOSTICS</b>",
+        styles['Title']
+    )
+
+    story.append(title)
+    story.append(Spacer(1, 20))
+
+    details = f'''
+    <b>Patient Name:</b> {name}<br/><br/>
+    <b>Test:</b> {test}<br/><br/>
+    <b>Date:</b> {date}<br/><br/>
+    <b>Time Slot:</b> {slot}<br/><br/>
+    <b>Address:</b> {address}<br/><br/>
+    <b>Lab:</b> NAMAN DIAGNOSTICS<br/><br/>
+    <b>Location:</b> Savedi, Ahilyanagar
+    '''
+
+    story.append(
+        Paragraph(details, styles['BodyText'])
+    )
+
+    story.append(Spacer(1, 30))
+
+    footer = Paragraph(
+        "Thank you for choosing NAMAN DIAGNOSTICS.",
+        styles['Italic']
+    )
+
+    story.append(footer)
+
+    doc.build(story)
+
+    return filename
+
+# ================= SEND PDF =================
+
+def send_pdf(phone, pdf_file):
+
+    try:
+
+        twilio_client.messages.create(
+            from_='whatsapp:+14155238886',
+
+            body='📄 Your booking report is attached.',
+
+            media_url=[
+                f'https://naman-diagnostics-bot.onrender.com/files/{pdf_file}'
+            ],
+
+            to=phone
+        )
+
+    except Exception as e:
+
+        print("PDF sending failed:", e)
+
 # ================= TEST INFO =================
 
 def get_test_info(test_name):
@@ -143,6 +218,13 @@ def menu(lang):
 
 Reply with number.
 '''
+
+# ================= FILE ROUTE =================
+
+@app.route('/files/<filename>')
+def files(filename):
+
+    return send_file(filename)
 
 # ================= WHATSAPP ROUTE =================
 
@@ -406,7 +488,7 @@ Select Time Slot:
 
             data = users[user]
 
-            # SAVE TO GOOGLE SHEETS
+            # SAVE BOOKING
 
             save_booking(
                 data["name"],
@@ -415,6 +497,16 @@ Select Time Slot:
                 data["slot"],
                 user,
                 data["address"]
+            )
+
+            # CREATE PDF
+
+            pdf_file = create_pdf(
+                data['name'],
+                data['test'],
+                data['date'],
+                data['slot'],
+                data['address']
             )
 
             # SEND ADMIN ALERT
@@ -427,6 +519,10 @@ Select Time Slot:
                 user,
                 data["address"]
             )
+
+            # SEND PDF TO PATIENT
+
+            send_pdf(user, pdf_file)
 
             # CONFIRMATION
 
@@ -453,6 +549,8 @@ Select Time Slot:
 🏥 Naman Diagnostics
 Savedi, Ahilyanagar
 
+📄 PDF रिपोर्ट पाठवला आहे.
+
 आमचा स्टाफ लवकरच संपर्क करेल.
 '''
 
@@ -478,6 +576,8 @@ Savedi, Ahilyanagar
 
 🏥 Naman Diagnostics
 Savedi, Ahilyanagar
+
+📄 PDF report has been sent.
 
 Our team will contact you shortly.
 '''
