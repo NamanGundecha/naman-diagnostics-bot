@@ -42,8 +42,8 @@ AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN")
 
 twilio_client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
-# CHANGE THIS TO YOUR NUMBER
-ADMIN_NUMBER = "whatsapp:+91YOURNUMBER"
+# CHANGE THIS
+ADMIN_NUMBER = "whatsapp:+919420662107"
 
 # ================= USER MEMORY =================
 
@@ -285,7 +285,131 @@ Select Language / भाषा निवडा
 2. मराठी
 '''
 
-        # ================= SLOT SELECTION =================
+        # ================= NAME =================
+
+        elif step == "name":
+
+            users[user]["name"] = msg
+
+            users[user]["step"] = "test"
+
+            reply = (
+                "Enter test name:"
+                if lang == "en"
+                else "टेस्ट नाव लिहा:"
+            )
+
+        # ================= TEST =================
+
+        elif step == "test":
+
+            users[user]["test"] = msg
+
+            users[user]["step"] = "home_collection"
+
+            if lang == "mr":
+
+                reply = '''
+होम सॅम्पल कलेक्शन हवे आहे का?
+
+1. हो
+2. नाही
+'''
+
+            else:
+
+                reply = '''
+Do you want Home Sample Collection?
+
+1. Yes
+2. No
+'''
+
+        # ================= HOME COLLECTION =================
+
+        elif step == "home_collection":
+
+            if msg == "1":
+
+                users[user]["home_collection"] = "Yes"
+
+                users[user]["step"] = "address"
+
+                reply = (
+                    "Enter your home address:"
+                    if lang == "en"
+                    else "तुमचा पत्ता लिहा:"
+                )
+
+            elif msg == "2":
+
+                users[user]["home_collection"] = "No"
+
+                users[user]["address"] = "Lab Visit"
+
+                users[user]["step"] = "date"
+
+                reply = (
+                    "Enter appointment date:"
+                    if lang == "en"
+                    else "तारीख लिहा:"
+                )
+
+            else:
+
+                reply = (
+                    "Reply with 1 or 2"
+                    if lang == "en"
+                    else "1 किंवा 2 पाठवा"
+                )
+
+        # ================= ADDRESS =================
+
+        elif step == "address":
+
+            users[user]["address"] = msg
+
+            users[user]["step"] = "date"
+
+            reply = (
+                "Enter appointment date:"
+                if lang == "en"
+                else "तारीख लिहा:"
+            )
+
+        # ================= DATE =================
+
+        elif step == "date":
+
+            users[user]["date"] = msg
+
+            users[user]["step"] = "slot"
+
+            if lang == "mr":
+
+                reply = '''
+वेळ निवडा:
+
+1. सकाळी 7 - 9
+2. सकाळी 9 - 12
+3. दुपारी 12 - 3
+4. दुपारी 3 - 6
+5. संध्याकाळी 6 - 9
+'''
+
+            else:
+
+                reply = '''
+Select Time Slot:
+
+1. 7 AM - 9 AM
+2. 9 AM - 12 PM
+3. 12 PM - 3 PM
+4. 3 PM - 6 PM
+5. 6 PM - 9 PM
+'''
+
+        # ================= SLOT =================
 
         elif step == "slot":
 
@@ -405,9 +529,17 @@ Savedi, Ahilyanagar
 
                 users[user]["step"] = "menu"
 
+        # ================= TEST INFO =================
+
+        elif step == "test_info":
+
+            reply = get_test_info(msg)
+
+            users[user]["step"] = "menu"
+
         # ================= MAIN MENU =================
 
-        elif msg == "1":
+        elif step == "menu" and msg == "1":
 
             users[user]["step"] = "name"
 
@@ -417,7 +549,7 @@ Savedi, Ahilyanagar
                 else "तुमचे नाव लिहा:"
             )
 
-        elif msg == "2":
+        elif step == "menu" and msg == "2":
 
             users[user]["step"] = "test_info"
 
@@ -427,7 +559,7 @@ Savedi, Ahilyanagar
                 else "टेस्ट नाव लिहा:"
             )
 
-        elif msg == "3":
+        elif step == "menu" and msg == "3":
 
             if lang == "mr":
 
@@ -459,137 +591,13 @@ Maharashtra 414003
 7:00 AM to 9:00 PM
 '''
 
-        elif msg == "4":
+        elif step == "menu" and msg == "4":
 
             reply = (
                 "Our staff will contact you shortly."
                 if lang == "en"
                 else "आमचा स्टाफ लवकरच संपर्क करेल."
             )
-
-        # ================= TEST INFO =================
-
-        elif step == "test_info":
-
-            reply = get_test_info(msg)
-
-            users[user]["step"] = "menu"
-
-        # ================= BOOKING FLOW =================
-
-        elif step == "name":
-
-            users[user]["name"] = msg
-
-            users[user]["step"] = "test"
-
-            reply = (
-                "Enter test name:"
-                if lang == "en"
-                else "टेस्ट नाव लिहा:"
-            )
-
-        elif step == "test":
-
-            users[user]["test"] = msg
-
-            users[user]["step"] = "home_collection"
-
-            if lang == "mr":
-
-                reply = '''
-होम सॅम्पल कलेक्शन हवे आहे का?
-
-1. हो
-2. नाही
-'''
-
-            else:
-
-                reply = '''
-Do you want Home Sample Collection?
-
-1. Yes
-2. No
-'''
-
-        elif step == "home_collection":
-
-            if msg == "1":
-
-                users[user]["home_collection"] = "Yes"
-
-                users[user]["step"] = "address"
-
-                reply = (
-                    "Enter your home address:"
-                    if lang == "en"
-                    else "तुमचा पत्ता लिहा:"
-                )
-
-            elif msg == "2":
-
-                users[user]["home_collection"] = "No"
-
-                users[user]["address"] = "Lab Visit"
-
-                users[user]["step"] = "date"
-
-                reply = (
-                    "Enter appointment date:"
-                    if lang == "en"
-                    else "तारीख लिहा:"
-                )
-
-            else:
-
-                reply = (
-                    "Reply with 1 or 2"
-                    if lang == "en"
-                    else "1 किंवा 2 पाठवा"
-                )
-
-        elif step == "address":
-
-            users[user]["address"] = msg
-
-            users[user]["step"] = "date"
-
-            reply = (
-                "Enter appointment date:"
-                if lang == "en"
-                else "तारीख लिहा:"
-            )
-
-        elif step == "date":
-
-            users[user]["date"] = msg
-
-            users[user]["step"] = "slot"
-
-            if lang == "mr":
-
-                reply = '''
-वेळ निवडा:
-
-1. सकाळी 7 - 9
-2. सकाळी 9 - 12
-3. दुपारी 12 - 3
-4. दुपारी 3 - 6
-5. संध्याकाळी 6 - 9
-'''
-
-            else:
-
-                reply = '''
-Select Time Slot:
-
-1. 7 AM - 9 AM
-2. 9 AM - 12 PM
-3. 12 PM - 3 PM
-4. 3 PM - 6 PM
-5. 6 PM - 9 PM
-'''
 
         # ================= DEFAULT =================
 
