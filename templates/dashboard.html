@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>NAMAN DIAGNOSTICS Dashboard</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+
+body {
+    font-family: Arial;
+    background: #f4f4f4;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: #222;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.patient {
+    margin-bottom: 15px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background: white;
+}
+
+.label {
+    font-weight: bold;
+}
+
+.status {
+    padding: 5px 10px;
+    border-radius: 8px;
+    background: orange;
+    color: white;
+    display: inline-block;
+}
+
+</style>
+
+</head>
+<body>
+
+<h1>🏥 NAMAN DIAGNOSTICS ADMIN DASHBOARD</h1>
+
+<div class="card">
+
+<h2>Total Bookings: {{ bookings|length }}</h2>
+
+</div>
+
+{% for booking in bookings %}
+
+<div class="patient">
+
+<p><span class="label">Patient:</span> {{ booking['Name'] }}</p>
+
+<p><span class="label">Test:</span> {{ booking['Test'] }}</p>
+
+<p><span class="label">Date:</span> {{ booking['Date'] }}</p>
+
+<p><span class="label">Slot:</span> {{ booking['Slot'] }}</p>
+
+<p><span class="label">Phone:</span> {{ booking['Phone'] }}</p>
+
+<p><span class="label">Address:</span> {{ booking['Address'] }}</p>
+
+<p>
+<span class="label">Status:</span>
+
+<span class="status">
+{{ booking['Status'] }}
+</span>
+</p>
+
+</div>
+
+{% endfor %}
+
+</body>
+</html>

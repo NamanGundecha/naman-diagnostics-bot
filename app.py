@@ -1,4 +1,6 @@
 from flask import Flask, request, send_file
+from flask import render_template, redirect, url_for
+import pandas as pd
 from twilio.twiml.messaging_response import MessagingResponse
 from twilio.rest import Client
 import gspread
@@ -612,6 +614,18 @@ Maharashtra 414003
     resp.message(reply)
 
     return str(resp)
+
+# ================= ADMIN DASHBOARD =================
+
+@app.route('/admin')
+def admin_dashboard():
+
+    records = sheet.get_all_records()
+
+    return render_template(
+        'dashboard.html',
+        bookings=records
+    )
 
 # ================= RUN APP =================
 
