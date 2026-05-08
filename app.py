@@ -232,18 +232,17 @@ def files(filename):
 # ================= WHATSAPP ROUTE =================
 
 
+from twilio.twiml.messaging_response import MessagingResponse
+
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp():
 
-    incoming_msg = request.values.get('Body', '').lower()
-
     response = MessagingResponse()
 
-    msg = response.message()
-
-    msg.body("Hello from Naman Diagnostics")
+    response.message("Bot is working perfectly ✅")
 
     return str(response)
+
 
     # ================= FIRST MESSAGE =================
 
