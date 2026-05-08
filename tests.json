@@ -1,0 +1,31 @@
+{
+  "cbc": {
+    "price": "300",
+    "fasting": "No fasting required"
+  },
+
+  "vitamin b12": {
+    "price": "1200",
+    "fasting": "No fasting required"
+  },
+
+  "vitamin d3": {
+    "price": "1500",
+    "fasting": "No fasting required"
+  },
+
+  "thyroid": {
+    "price": "500",
+    "fasting": "No fasting required"
+  },
+
+  "sugar": {
+    "price": "150",
+    "fasting": "8-10 hours fasting required"
+  },
+
+  "lipid profile": {
+    "price": "800",
+    "fasting": "10-12 hours fasting required"
+  }
+}
