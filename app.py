@@ -42,7 +42,8 @@ AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN")
 
 twilio_client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
-ADMIN_NUMBER = "whatsapp:+919420662107"
+# CHANGE THIS TO YOUR NUMBER
+ADMIN_NUMBER = "whatsapp:+91YOURNUMBER"
 
 # ================= USER MEMORY =================
 
@@ -191,7 +192,7 @@ Test available.
 Please contact lab for details.
 '''
 
-# ================= MENUS =================
+# ================= MENU =================
 
 def menu(lang):
 
@@ -257,7 +258,7 @@ Select Language / भाषा निवडा
 
         lang = users[user].get("lang", "en")
 
-        # ================= LANGUAGE SELECTION =================
+        # ================= LANGUAGE =================
 
         if step == "language":
 
@@ -283,6 +284,126 @@ Select Language / भाषा निवडा
 1. English
 2. मराठी
 '''
+
+        # ================= SLOT SELECTION =================
+
+        elif step == "slot":
+
+            slots = {
+                "1": "7 AM - 9 AM",
+                "2": "9 AM - 12 PM",
+                "3": "12 PM - 3 PM",
+                "4": "3 PM - 6 PM",
+                "5": "6 PM - 9 PM"
+            }
+
+            slot = slots.get(msg)
+
+            if not slot:
+
+                reply = (
+                    "Please select valid slot number (1-5)."
+                    if lang == "en"
+                    else "कृपया योग्य स्लॉट नंबर निवडा (1-5)."
+                )
+
+            else:
+
+                users[user]["slot"] = slot
+
+                data = users[user]
+
+                # SAVE BOOKING
+
+                save_booking(
+                    data["name"],
+                    data["test"],
+                    data["date"],
+                    data["slot"],
+                    user,
+                    data["address"]
+                )
+
+                # CREATE PDF
+
+                pdf_file = create_pdf(
+                    data['name'],
+                    data['test'],
+                    data['date'],
+                    data['slot'],
+                    data['address']
+                )
+
+                # SEND ADMIN ALERT
+
+                send_admin_alert(
+                    data["name"],
+                    data["test"],
+                    data["date"],
+                    data["slot"],
+                    user,
+                    data["address"]
+                )
+
+                # SEND PDF
+
+                send_pdf(user, pdf_file)
+
+                # CONFIRMATION
+
+                if lang == "mr":
+
+                    reply = f'''
+✅ अपॉइंटमेंट बुक झाले
+
+👤 नाव:
+{data['name']}
+
+🧪 टेस्ट:
+{data['test']}
+
+📅 तारीख:
+{data['date']}
+
+🕒 वेळ:
+{data['slot']}
+
+📍 पत्ता:
+{data['address']}
+
+🏥 Naman Diagnostics
+Savedi, Ahilyanagar
+
+📄 PDF रिपोर्ट पाठवला आहे.
+'''
+
+                else:
+
+                    reply = f'''
+✅ APPOINTMENT BOOKED
+
+👤 Name:
+{data['name']}
+
+🧪 Test:
+{data['test']}
+
+📅 Date:
+{data['date']}
+
+🕒 Time Slot:
+{data['slot']}
+
+📍 Address:
+{data['address']}
+
+🏥 Naman Diagnostics
+Savedi, Ahilyanagar
+
+📄 PDF report has been sent.
+'''
+
+                users[user]["step"] = "menu"
 
         # ================= MAIN MENU =================
 
@@ -392,8 +513,6 @@ Do you want Home Sample Collection?
 2. No
 '''
 
-        # ================= HOME COLLECTION =================
-
         elif step == "home_collection":
 
             if msg == "1":
@@ -471,128 +590,6 @@ Select Time Slot:
 4. 3 PM - 6 PM
 5. 6 PM - 9 PM
 '''
-
-        elif step == "slot":
-
-            slots = {
-                "1": "7 AM - 9 AM",
-                "2": "9 AM - 12 PM",
-                "3": "12 PM - 3 PM",
-                "4": "3 PM - 6 PM",
-                "5": "6 PM - 9 PM"
-            }
-
-            slot = slots.get(msg, "Not Selected")
-
-            users[user]["slot"] = slot
-
-            data = users[user]
-
-            # SAVE BOOKING
-
-            save_booking(
-                data["name"],
-                data["test"],
-                data["date"],
-                data["slot"],
-                user,
-                data["address"]
-            )
-
-            # CREATE PDF
-
-            pdf_file = create_pdf(
-                data['name'],
-                data['test'],
-                data['date'],
-                data['slot'],
-                data['address']
-            )
-
-            # SEND ADMIN ALERT
-
-            send_admin_alert(
-                data["name"],
-                data["test"],
-                data["date"],
-                data["slot"],
-                user,
-                data["address"]
-            )
-
-            # SEND PDF TO PATIENT
-
-            send_pdf(user, pdf_file)
-
-            # CONFIRMATION
-
-            if lang == "mr":
-
-                reply = f'''
-✅ अपॉइंटमेंट बुक झाले
-
-👤 नाव:
-{data['name']}
-
-🧪 टेस्ट:
-{data['test']}
-
-📅 तारीख:
-{data['date']}
-
-🕒 वेळ:
-{data['slot']}
-
-📍 पत्ता:
-{data['address']}
-
-🏥 Naman Diagnostics
-Savedi, Ahilyanagar
-
-📄 PDF रिपोर्ट पाठवला आहे.
-
-आमचा स्टाफ लवकरच संपर्क करेल.
-'''
-
-            else:
-
-                reply = f'''
-✅ APPOINTMENT BOOKED
-
-👤 Name:
-{data['name']}
-
-🧪 Test:
-{data['test']}
-
-📅 Date:
-{data['date']}
-
-🕒 Time Slot:
-{data['slot']}
-
-📍 Address:
-{data['address']}
-
-🏥 Naman Diagnostics
-Savedi, Ahilyanagar
-
-📄 PDF report has been sent.
-
-Our team will contact you shortly.
-'''
-
-            users[user]["step"] = "menu"
-
-        # ================= HUMAN SUPPORT =================
-
-        elif msg.lower() in ["human", "staff", "call"]:
-
-            reply = (
-                "Our staff will contact you shortly."
-                if lang == "en"
-                else "आमचा स्टाफ लवकरच संपर्क करेल."
-            )
 
         # ================= DEFAULT =================
 
