@@ -16,8 +16,10 @@ scope = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-creds = ServiceAccountCredentials.from_json_keyfile_name(
-    r"C:\Users\Naman Gundecha\OneDrive\Desktop\naman-chatbot\creds.json",
+google_creds = json.loads(os.environ.get("GOOGLE_CREDS_JSON"))
+
+creds = ServiceAccountCredentials.from_json_keyfile_dict(
+    google_creds,
     scope
 )
 
