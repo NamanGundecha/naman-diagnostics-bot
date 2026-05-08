@@ -4,8 +4,8 @@ from twilio.rest import Client
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
-import os
 import json
+import os
 
 app = Flask(__name__)
 
@@ -47,7 +47,7 @@ users = {}
 
 # ================= SAVE BOOKING =================
 
-def save_booking(name, test, date, slot, phone):
+def save_booking(name, test, date, slot, phone, address):
 
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -57,13 +57,14 @@ def save_booking(name, test, date, slot, phone):
         date,
         slot,
         phone,
+        address,
         "Pending",
         timestamp
     ])
 
 # ================= ADMIN ALERT =================
 
-def send_admin_alert(name, test, date, slot, phone):
+def send_admin_alert(name, test, date, slot, phone, address):
 
     try:
 
@@ -78,6 +79,7 @@ Test: {test}
 Date: {date}
 Time Slot: {slot}
 Phone: {phone}
+Address: {address}
 ''',
 
             to=ADMIN_NUMBER
@@ -288,6 +290,68 @@ Maharashtra 414003
 
             users[user]["test"] = msg
 
+            users[user]["step"] = "home_collection"
+
+            if lang == "mr":
+
+                reply = '''
+होम सॅम्पल कलेक्शन हवे आहे का?
+
+1. हो
+2. नाही
+'''
+
+            else:
+
+                reply = '''
+Do you want Home Sample Collection?
+
+1. Yes
+2. No
+'''
+
+        # ================= HOME COLLECTION =================
+
+        elif step == "home_collection":
+
+            if msg == "1":
+
+                users[user]["home_collection"] = "Yes"
+
+                users[user]["step"] = "address"
+
+                reply = (
+                    "Enter your home address:"
+                    if lang == "en"
+                    else "तुमचा पत्ता लिहा:"
+                )
+
+            elif msg == "2":
+
+                users[user]["home_collection"] = "No"
+
+                users[user]["address"] = "Lab Visit"
+
+                users[user]["step"] = "date"
+
+                reply = (
+                    "Enter appointment date:"
+                    if lang == "en"
+                    else "तारीख लिहा:"
+                )
+
+            else:
+
+                reply = (
+                    "Reply with 1 or 2"
+                    if lang == "en"
+                    else "1 किंवा 2 पाठवा"
+                )
+
+        elif step == "address":
+
+            users[user]["address"] = msg
+
             users[user]["step"] = "date"
 
             reply = (
@@ -343,24 +407,28 @@ Select Time Slot:
             data = users[user]
 
             # SAVE TO GOOGLE SHEETS
+
             save_booking(
                 data["name"],
                 data["test"],
                 data["date"],
                 data["slot"],
-                user
+                user,
+                data["address"]
             )
 
             # SEND ADMIN ALERT
+
             send_admin_alert(
                 data["name"],
                 data["test"],
                 data["date"],
                 data["slot"],
-                user
+                user,
+                data["address"]
             )
 
-            # CONFIRMATION MESSAGE
+            # CONFIRMATION
 
             if lang == "mr":
 
@@ -379,7 +447,10 @@ Select Time Slot:
 🕒 वेळ:
 {data['slot']}
 
-📍 Naman Diagnostics
+📍 पत्ता:
+{data['address']}
+
+🏥 Naman Diagnostics
 Savedi, Ahilyanagar
 
 आमचा स्टाफ लवकरच संपर्क करेल.
@@ -402,7 +473,10 @@ Savedi, Ahilyanagar
 🕒 Time Slot:
 {data['slot']}
 
-📍 Naman Diagnostics
+📍 Address:
+{data['address']}
+
+🏥 Naman Diagnostics
 Savedi, Ahilyanagar
 
 Our team will contact you shortly.
