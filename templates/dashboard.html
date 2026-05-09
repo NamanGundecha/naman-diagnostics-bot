@@ -361,9 +361,13 @@ placeholder="🔍 Search patient, phone, test..."
 
     <div class="actions">
 
-        <button class="btn approve">
+        <a href="/approve/{{ loop.index0 }}">
+
+            <button class="btn approve">
             ✅ Approve
-        </button>
+            </button>
+
+        </a>
 
         <button class="btn report">
             📄 Upload Report

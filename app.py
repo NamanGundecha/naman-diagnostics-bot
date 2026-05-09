@@ -1,5 +1,5 @@
 from flask import Flask, request, send_file
-from flask import render_template
+from flask import render_template, redirect, url_for
 from twilio.twiml.messaging_response import MessagingResponse
 from twilio.rest import Client
 import gspread
@@ -677,6 +677,28 @@ def admin_dashboard():
         'dashboard.html',
         bookings=records
     )
+
+# ================= APPROVE BOOKING =================
+
+@app.route('/approve/<int:row>')
+def approve_booking(row):
+
+    try:
+
+        # Status column = 7
+
+        sheet.update_cell(
+            row + 2,
+            7,
+            "Approved"
+        )
+
+    except Exception as e:
+
+        return f"Error: {str(e)}"
+
+    return redirect(url_for('admin_dashboard'))
+
 
 # ================= RUN APP =================
 
