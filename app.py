@@ -1,6 +1,5 @@
 from flask import Flask, request, send_file
-from flask import render_template, redirect, url_for
-import pandas as pd
+from flask import render_template
 from twilio.twiml.messaging_response import MessagingResponse
 from twilio.rest import Client
 import gspread
@@ -21,7 +20,9 @@ scope = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-google_creds = json.loads(os.environ.get("GOOGLE_CREDS_JSON"))
+google_creds = json.loads(
+    os.environ.get("GOOGLE_CREDS_JSON")
+)
 
 creds = ServiceAccountCredentials.from_json_keyfile_dict(
     google_creds,
@@ -30,7 +31,9 @@ creds = ServiceAccountCredentials.from_json_keyfile_dict(
 
 client = gspread.authorize(creds)
 
-sheet = client.open("Naman Diagnostics Bookings").sheet1
+sheet = client.open(
+    "Naman Diagnostics Bookings"
+).sheet1
 
 # ================= LOAD TEST DATABASE =================
 
@@ -39,12 +42,19 @@ with open("tests.json", "r") as f:
 
 # ================= TWILIO SETUP =================
 
-ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID")
-AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN")
+ACCOUNT_SID = os.environ.get(
+    "TWILIO_ACCOUNT_SID"
+)
 
-twilio_client = Client(ACCOUNT_SID, AUTH_TOKEN)
+AUTH_TOKEN = os.environ.get(
+    "TWILIO_AUTH_TOKEN"
+)
 
-# CHANGE THIS
+twilio_client = Client(
+    ACCOUNT_SID,
+    AUTH_TOKEN
+)
+
 ADMIN_NUMBER = "whatsapp:+919420662107"
 
 # ================= USER MEMORY =================
@@ -53,9 +63,18 @@ users = {}
 
 # ================= SAVE BOOKING =================
 
-def save_booking(name, test, date, slot, phone, address):
+def save_booking(
+    name,
+    test,
+    date,
+    slot,
+    phone,
+    address
+):
 
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    timestamp = datetime.now().strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
 
     sheet.append_row([
         name,
@@ -70,11 +89,19 @@ def save_booking(name, test, date, slot, phone, address):
 
 # ================= ADMIN ALERT =================
 
-def send_admin_alert(name, test, date, slot, phone, address):
+def send_admin_alert(
+    name,
+    test,
+    date,
+    slot,
+    phone,
+    address
+):
 
     try:
 
         twilio_client.messages.create(
+
             from_='whatsapp:+14155238886',
 
             body=f'''
@@ -97,7 +124,13 @@ Address: {address}
 
 # ================= PDF REPORT =================
 
-def create_pdf(name, test, date, slot, address):
+def create_pdf(
+    name,
+    test,
+    date,
+    slot,
+    address
+):
 
     filename = f"{name.replace(' ', '_')}_report.pdf"
 
@@ -152,6 +185,7 @@ def send_pdf(phone, pdf_file):
     try:
 
         twilio_client.messages.create(
+
             from_='whatsapp:+14155238886',
 
             body='📄 Your booking report is attached.',
@@ -229,20 +263,31 @@ def files(filename):
 
     return send_file(filename)
 
+# ================= HOME ROUTE =================
+
+@app.route("/")
+def home():
+
+    return "Naman Diagnostics Bot Running Successfully ✅"
+
 # ================= WHATSAPP ROUTE =================
-
-
-from twilio.twiml.messaging_response import MessagingResponse
 
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp():
 
-    response = MessagingResponse()
+    incoming_msg = request.values.get(
+        "Body",
+        ""
+    ).strip()
 
-    response.message("Bot is working perfectly ✅")
+    msg = incoming_msg.lower()
 
-    return str(response)
+    user = request.values.get(
+        "From",
+        ""
+    )
 
+    reply = ""
 
     # ================= FIRST MESSAGE =================
 
@@ -265,7 +310,10 @@ Select Language / भाषा निवडा
 
         step = users[user]["step"]
 
-        lang = users[user].get("lang", "en")
+        lang = users[user].get(
+            "lang",
+            "en"
+        )
 
         # ================= LANGUAGE =================
 
@@ -274,6 +322,7 @@ Select Language / भाषा निवडा
             if msg == "1":
 
                 users[user]["lang"] = "en"
+
                 users[user]["step"] = "menu"
 
                 reply = menu("en")
@@ -281,6 +330,7 @@ Select Language / भाषा निवडा
             elif msg == "2":
 
                 users[user]["lang"] = "mr"
+
                 users[user]["step"] = "menu"
 
                 reply = menu("mr")
@@ -294,11 +344,79 @@ Select Language / भाषा निवडा
 2. मराठी
 '''
 
+        # ================= MAIN MENU =================
+
+        elif step == "menu":
+
+            if msg == "1":
+
+                users[user]["step"] = "name"
+
+                reply = (
+                    "Enter your name:"
+                    if lang == "en"
+                    else "तुमचे नाव लिहा:"
+                )
+
+            elif msg == "2":
+
+                users[user]["step"] = "test_info"
+
+                reply = (
+                    "Enter test name:"
+                    if lang == "en"
+                    else "टेस्ट नाव लिहा:"
+                )
+
+            elif msg == "3":
+
+                if lang == "mr":
+
+                    reply = '''
+🏥 NAMAN DIAGNOSTICS
+
+📍 Meenu Bunglow,
+Professor Colony Chowk Rd,
+near SBI ATM,
+Savedi, Ahilyanagar,
+Maharashtra 414003
+
+🕖 वेळ:
+सकाळी 7 ते रात्री 9
+'''
+
+                else:
+
+                    reply = '''
+🏥 NAMAN DIAGNOSTICS
+
+📍 Meenu Bunglow,
+Professor Colony Chowk Rd,
+near SBI ATM,
+Savedi, Ahilyanagar,
+Maharashtra 414003
+
+🕖 Timing:
+7:00 AM to 9:00 PM
+'''
+
+            elif msg == "4":
+
+                reply = (
+                    "Our staff will contact you shortly."
+                    if lang == "en"
+                    else "आमचा स्टाफ लवकरच संपर्क करेल."
+                )
+
+            else:
+
+                reply = menu(lang)
+
         # ================= NAME =================
 
         elif step == "name":
 
-            users[user]["name"] = msg
+            users[user]["name"] = incoming_msg
 
             users[user]["step"] = "test"
 
@@ -312,7 +430,7 @@ Select Language / भाषा निवडा
 
         elif step == "test":
 
-            users[user]["test"] = msg
+            users[user]["test"] = incoming_msg
 
             users[user]["step"] = "home_collection"
 
@@ -376,7 +494,7 @@ Do you want Home Sample Collection?
 
         elif step == "address":
 
-            users[user]["address"] = msg
+            users[user]["address"] = incoming_msg
 
             users[user]["step"] = "date"
 
@@ -390,7 +508,7 @@ Do you want Home Sample Collection?
 
         elif step == "date":
 
-            users[user]["date"] = msg
+            users[user]["date"] = incoming_msg
 
             users[user]["step"] = "slot"
 
@@ -446,8 +564,6 @@ Select Time Slot:
 
                 data = users[user]
 
-                # SAVE BOOKING
-
                 save_booking(
                     data["name"],
                     data["test"],
@@ -457,8 +573,6 @@ Select Time Slot:
                     data["address"]
                 )
 
-                # CREATE PDF
-
                 pdf_file = create_pdf(
                     data['name'],
                     data['test'],
@@ -466,8 +580,6 @@ Select Time Slot:
                     data['slot'],
                     data['address']
                 )
-
-                # SEND ADMIN ALERT
 
                 send_admin_alert(
                     data["name"],
@@ -478,11 +590,7 @@ Select Time Slot:
                     data["address"]
                 )
 
-                # SEND PDF
-
                 send_pdf(user, pdf_file)
-
-                # CONFIRMATION
 
                 if lang == "mr":
 
@@ -503,9 +611,6 @@ Select Time Slot:
 
 📍 पत्ता:
 {data['address']}
-
-🏥 Naman Diagnostics
-Savedi, Ahilyanagar
 
 📄 PDF रिपोर्ट पाठवला आहे.
 '''
@@ -530,9 +635,6 @@ Savedi, Ahilyanagar
 📍 Address:
 {data['address']}
 
-🏥 Naman Diagnostics
-Savedi, Ahilyanagar
-
 📄 PDF report has been sent.
 '''
 
@@ -542,85 +644,27 @@ Savedi, Ahilyanagar
 
         elif step == "test_info":
 
-            reply = get_test_info(msg)
+            reply = get_test_info(
+                incoming_msg
+            )
 
             users[user]["step"] = "menu"
-
-        # ================= MAIN MENU =================
-
-        elif step == "menu" and msg == "1":
-
-            users[user]["step"] = "name"
-
-            reply = (
-                "Enter your name:"
-                if lang == "en"
-                else "तुमचे नाव लिहा:"
-            )
-
-        elif step == "menu" and msg == "2":
-
-            users[user]["step"] = "test_info"
-
-            reply = (
-                "Enter test name:"
-                if lang == "en"
-                else "टेस्ट नाव लिहा:"
-            )
-
-        elif step == "menu" and msg == "3":
-
-            if lang == "mr":
-
-                reply = '''
-🏥 NAMAN DIAGNOSTICS
-
-📍 Meenu Bunglow,
-Professor Colony Chowk Rd,
-near SBI ATM,
-Savedi, Ahilyanagar,
-Maharashtra 414003
-
-🕖 वेळ:
-सकाळी 7 ते रात्री 9
-'''
-
-            else:
-
-                reply = '''
-🏥 NAMAN DIAGNOSTICS
-
-📍 Meenu Bunglow,
-Professor Colony Chowk Rd,
-near SBI ATM,
-Savedi, Ahilyanagar,
-Maharashtra 414003
-
-🕖 Timing:
-7:00 AM to 9:00 PM
-'''
-
-        elif step == "menu" and msg == "4":
-
-            reply = (
-                "Our staff will contact you shortly."
-                if lang == "en"
-                else "आमचा स्टाफ लवकरच संपर्क करेल."
-            )
 
         # ================= DEFAULT =================
 
         else:
 
+            users[user]["step"] = "menu"
+
             reply = menu(lang)
 
     # ================= SEND RESPONSE =================
 
-    resp = MessagingResponse()
+    response = MessagingResponse()
 
-    resp.message(reply)
+    response.message(reply)
 
-    return str(resp)
+    return str(response)
 
 # ================= ADMIN DASHBOARD =================
 
@@ -638,4 +682,4 @@ def admin_dashboard():
 
 if __name__ == "__main__":
 
-    app.run(port=5000)
+    app.run(host="0.0.0.0", port=5000)
