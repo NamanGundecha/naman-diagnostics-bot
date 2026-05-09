@@ -373,9 +373,16 @@ placeholder="🔍 Search patient, phone, test..."
             📄 Upload Report
         </button>
 
-        <button class="btn call">
-            📞 Call Patient
-        </button>
+        <a
+        href="https://wa.me/{{ booking['Phone'].replace('whatsapp:+', '') }}"
+        target="_blank"
+        >
+
+          <button class="btn call">
+          📞 Message Patient
+          </button>
+
+        </a>
 
     </div>
 
